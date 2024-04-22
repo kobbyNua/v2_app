@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'agadarko_v2.apps.AgadarkoV2Config',
+    
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders'
@@ -85,7 +86,7 @@ WSGI_APPLICATION = 'V2_App.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'v2',
+        'NAME': 'v2_app',
         'USER':'root',
         'PASSWORD':'',
         'HOST':'127.0.0.1'

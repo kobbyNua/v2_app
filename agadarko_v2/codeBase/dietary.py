@@ -83,7 +83,7 @@ def view_patient_dispenary(case_number,user_id):
     else:
         #print(get_patient_dietary.patient.id)
         dietary=get_patient_dietary_details_records(get_patient_dietary.patient.id)
-        patient_dietary_record=[{'patient':get_patient_dietary.patient.patient.patient.patient.first_name+' '+get_patient_dietary.patient.patient.patient.patient.last_name,'case_number':get_patient_dietary.patient.patient.case_number,'card_number':get_patient_dietary.patient.patient.patient.card_number,'total_cost':get_patient_dietary.total_cost,'date_dispenser':get_patient_dietary.date_released,'date_prescribe':get_patient_dietary.date_recieved,'payment_status':get_patient_dietary.payment_status,'dispensed_status':get_patient_dietary.date_released}]
+        patient_dietary_record=[{'patient':get_patient_dietary.patient.patient.patient.patient.first_name+' '+get_patient_dietary.patient.patient.patient.patient.last_name,'case_number':get_patient_dietary.patient.patient.case_number,'card_number':get_patient_dietary.patient.patient.patient.card_number,'total_cost':get_patient_dietary.total_cost,'date_dispenser':get_patient_dietary.date_released,'date_prescribe':get_patient_dietary.date_recieved,'payment_status':get_patient_dietary.payment_status,'dispensed_status':get_patient_dietary.date_released,'discount_rate':get_patient_dietary.discount_rate,'discount_amount':get_patient_dietary.discount_amount,'discount_status':get_patient_dietary.discount_status}]
         return {'patient_dietary_history_list':view_patient_dietary_supplement_history_records(get_patient_dietary.patient.patient.patient.card_number),'patient_dietory_records':patient_dietary_record,'patient_dietary_supplement_list':dietary}
         
         
@@ -127,44 +127,101 @@ def get_patient_dietary_details_records(patient_dietary_id):
 
 def dispensed_patient_dietary_supplement(patient_case_number,dietary_code,quantity,amount_paid):
     #first get  patient dietary supplemnt
-    #patient_dietary_record=get_patient_dietary_details(patient_case_number)
+    patient_dietary_record=get_patient_dietary_details(patient_case_number)
     total=0
+    #print('hello')
     for items in range(len(dietary_code)):
         dispense_patient_dietary=Patient_Dietary_Supplementary_Records_Details.objects.get(patient__patient__patient__case_number=patient_case_number,dietary_supplement__serial_code=dietary_code[items])
         price_per_unit=dispense_patient_dietary.dietary_supplement.price*int(quantity[items])
         total+=dispense_patient_dietary.dietary_supplement.price*int(quantity[items])
         #print(dispense_patient_dietary.dietary_supplement.serial_code,' ',dispense_patient_dietary.dietary_supplement.price,' ',price_per_unit,'  ',int(quantity[items]))
     #print(total)
-    balance=total-float(amount_paid)
+    
     #print('balance ',balance)
-    if balance == 0.00:
-        for items in range(len(dietary_code)):
-            print(items)
-            dispense_patient_dietary=Patient_Dietary_Supplementary_Records_Details.objects.get(patient__patient__patient__case_number=patient_case_number,dietary_supplement__serial_code=dietary_code[items])
-            dispense_patient_dietary.quantity=quantity[items]
+    #print('balance')
+    if patient_dietary_record.discount_status == True :
+        #print('ok')
+        discount=total*(100-patient_dietary_record.discount_rate)/100
+        balance=float(discount)-float(amount_paid)
+        
+        if balance == 0.00:
+           #print(discount,balance,total)
+           
+           for items in range(len(dietary_code)):
+               #print(items)
+               print('helloo',dietary_code[items],quantity[items])
+               
+               dispense_patient_dietary=Patient_Dietary_Supplementary_Records_Details.objects.get(patient__patient__patient__case_number=patient_case_number,dietary_supplement__serial_code=dietary_code[items])
+               dispense_patient_dietary.quantity=quantity[items]
             
-            dieatry_serial_code=dispense_patient_dietary.dietary_supplement.serial_code 
-            #print(dieatry_serial_code,"fine babes")
-            dispense_patient_dietary.total_cost=dispense_patient_dietary.cost * int(quantity[items])
-            dispense_patient_dietary.save()
-            supplement_list=get_dietary_supplement(dietary_code[items])
-            #print(supplement_list)
-            inventory_sales=Dietary_Sale_Inventory_Table.objects.create(dietary=Dietary_Supplementary.objects.get(pk=supplement_list['id']),quantity=quantity[items],cost_per_unit=supplement_list['price'])
+               dieatry_serial_code=dispense_patient_dietary.dietary_supplement.serial_code 
+               #print(dieatry_serial_code,"fine babes")
+               dispense_patient_dietary.total_cost=dispense_patient_dietary.cost * int(quantity[items])
+               dispense_patient_dietary.save()
+               supplement_list=get_dietary_supplement(dietary_code[items])
+               #print(supplement_list)
+               inventory_sales=Dietary_Sale_Inventory_Table.objects.create(dietary=Dietary_Supplementary.objects.get(pk=supplement_list['id']),quantity=quantity[items],cost_per_unit=supplement_list['price'])
             
-            inventory_sales.save()
-            update_supplement_dietary_quantity(dietary_code[items],quantity[items])
-            #print(supplement_list['id'])
-    dietary_updates=status_updates(patient_case_number)
-    total_costs=totalsupplementCost(patient_case_number,total)
-    mediac_record_update=patient_medical_dietary_records(patient_case_number)
-    checkout_patient=checkoutPatien(patient_case_number)
-    if dietary_updates == True and mediac_record_update== True and total_costs==True and checkout_patient==True:
-        pds=Patient_Medical_Diagnosis_Records.objects.get(patient__case_number=patient_case_number)
-        messages='Hi {},payment of GHS {} recieved for supplement.\nbalance {}\n.invoice {}\n.AGADARKO\nAdmin'.format(pds.patient.patient.patient.first_name,amount_paid,balance,patient_case_number)
-        smscalls(messages,pds.patient.patient.patient.telephone)
-        return {'status':'success','message':'dietary supplements dispensed'}                         
+               inventory_sales.save()
+               update_supplement_dietary_quantity(dietary_code[items],quantity[items])
+               #print(supplement_list['id'])
+           dietary_updates=status_updates(patient_case_number)
+           total_costs=totalsupplementCost(patient_case_number,total)
+           mediac_record_update=patient_medical_dietary_records(patient_case_number)
+           checkout_patient=checkoutPatien(patient_case_number)
+           if dietary_updates == True and mediac_record_update== True and total_costs==True and checkout_patient==True:
+                  pds=Patient_Medical_Diagnosis_Records.objects.get(patient__case_number=patient_case_number)
+                  messages='Hi {},payment of GHS {} recieved for supplement.\nbalance {}\n.invoice {}\n.AGADARKO\nAdmin'.format(pds.patient.patient.patient.first_name,amount_paid,balance,patient_case_number)
+                  #smscalls(messages,pds.patient.patient.patient.telephone)
+                  return {'status':'success','message':'dietary supplements dispensed'}                         
+           else:
+                 return {'status':'error','message':'could not dispense dietary supplement'}
+               
+            
+        else:
+                 return  {'status':'error','message':'insufficient credits'}
+                
+    
     else:
-       return {'status':'error','message':'could not dispense dietary supplement'}
+        balance=float(total)-float(amount_paid)
+        if balance == 0.00:
+        
+           for items in range(len(dietary_code)):
+               #supplement_list=get_dietary_supplement(dietary_code[items])
+               #print('piplo',supplement_list)
+               #update_supplement_dietary_quantity(dietary_code[items],quantity[items])
+               #print(items)
+               #print('hello ',dietary_code[items],quantity[items])
+               #print('pile',dispense_patient_dietary.cost,' ' , int(quantity[items]),' ',dispense_patient_dietary.cost * int(quantity[items]),supplement_list['price'])
+               
+               dispense_patient_dietary=Patient_Dietary_Supplementary_Records_Details.objects.get(patient__patient__patient__case_number=patient_case_number,dietary_supplement__serial_code=dietary_code[items])
+               dispense_patient_dietary.quantity=quantity[items]
+            
+               dieatry_serial_code=dispense_patient_dietary.dietary_supplement.serial_code 
+               #print(dieatry_serial_code,"fine babes")
+               dispense_patient_dietary.total_cost=dispense_patient_dietary.cost * int(quantity[items])
+               dispense_patient_dietary.save()
+               supplement_list=get_dietary_supplement(dietary_code[items])
+               #print(supplement_list)
+               inventory_sales=Dietary_Sale_Inventory_Table.objects.create(dietary=Dietary_Supplementary.objects.get(pk=supplement_list['id']),quantity=quantity[items],cost_per_unit=supplement_list['price'])
+            
+               inventory_sales.save()
+               update_supplement_dietary_quantity(dietary_code[items],quantity[items])
+               #print(supplement_list['id'])
+           dietary_updates=status_updates(patient_case_number)
+           total_costs=totalsupplementCost(patient_case_number,total)
+           mediac_record_update=patient_medical_dietary_records(patient_case_number)
+           checkout_patient=checkoutPatien(patient_case_number)
+           if dietary_updates == True and mediac_record_update== True and total_costs==True and checkout_patient==True:
+                  pds=Patient_Medical_Diagnosis_Records.objects.get(patient__case_number=patient_case_number)
+                  messages='Hi {},payment of GHS {} recieved for supplement.\nbalance {}\n.invoice {}\n.AGADARKO\nAdmin'.format(pds.patient.patient.patient.first_name,amount_paid,balance,patient_case_number)
+                  #smscalls(messages,pds.patient.patient.patient.telephone)
+                  return {'status':'success','message':'dietary supplements dispensed'}                         
+           else:
+                 return {'status':'error','message':'could not dispense dietary supplement'}
+               
+        else:
+                 return  {'status':'error','message':'insufficient credits'}
     
 
     '''
@@ -195,6 +252,8 @@ def dispensed_patient_dietary_supplement(patient_case_number,dietary_code,quanti
     '''
 
 
+def updateDietaryItems(seriakl_code,quantity):
+    pass
 def checkoutPatien(case_number):
         check_out_patient=Patient_Medical_History_Records.objects.get(case_number=case_number)
         check_out_patient.checked_out=True
@@ -206,7 +265,13 @@ def checkoutPatien(case_number):
 
 def totalsupplementCost(case_number,total_cost):
     update_dietary_cost=Patient_Dietary_Supplementary_Records.objects.get(patient__patient__case_number=case_number)
+    if update_dietary_cost.discount_status == True:
+        if int(update_dietary_cost.discount_rate) > 0:
+            discount_cost=float(total_cost)*(100-int(update_dietary_cost.discount_rate))/100
+    else:
+        discount_cost=total_cost
     update_dietary_cost.amount_paid=total_cost
+    update_dietary_cost.discount_amount=discount_cost
     update_dietary_cost.payment_status=True
     update_dietary_cost.save()
     return True
@@ -243,10 +308,12 @@ def patient_medical_dietary_records(patient_case_number):
     return True
 
 def update_supplement_dietary_quantity(dietary_serial_code,quantity):
-    #print(dietary_serial_code,"kkkkkkkkkkkkkkkkkkkkk")
+    print('hit',dietary_serial_code,quantity)
+    '''
     dietary_quantity_update=Dietary_Supplementary.objects.get(serial_code=dietary_serial_code)
     dietary_quantity_update.quatity_in_stocked=int(dietary_quantity_update.quatity_in_stocked)-int(quantity)
     dietary_quantity_update.save()
+    '''
 
 
 def sales_record(case_number,amount):
@@ -319,6 +386,10 @@ def dietary_supplement_stocking_details_history():
     #return all dietary supplement dietaries
     return Dietary_Supplementary_Details.objects.all()
 
+
+def dietaryStockingDetails(serial_code):
+    return {'history_details':viewStockingSupplementDietaryList(serial_code),'supplement_details':getSupplementDetails(serial_code)}
+
 def viewStockingSupplementDietaryList(serial_code):
     data=[]
     supplement=Dietary_Supplement_Stocking_Details.objects.filter(dietary__dietary__serial_code=serial_code)
@@ -326,6 +397,10 @@ def viewStockingSupplementDietaryList(serial_code):
     for stocks in supplement:
         data.append({'date_stocked':stocks.date_stocked,'previous_price':stocks.old_cost,'quantity_at_the_time_of_stocking':stocks.quantity_at_the_time_of_stocking,'quatity_stocked':stocks.new_quantity_stocked,'previous_quantity_stocked':stocks.old_quantity_stocked,'stocked_by':stocks.stocked_by.first_name+' '+stocks.stocked_by.last_name})
     return data
+
+def getSupplementDetails(dietary_code):
+    dietary_supplement=Dietary_Supplementary.objects.get(serial_code=dietary_code)
+    return {'photo':dietary_supplement.photo.url,'serial_code':dietary_supplement.serial_code,'quantity':dietary_supplement.quatity_in_stocked,'supplement':dietary_supplement.supplement,'price':dietary_supplement.price}
 
 
 def dietary_pending_for_restock():
@@ -384,7 +459,7 @@ outsiders sales inventory
 
 '''
 
-def customers_inventory_sales(telephone,dietary_supplement,quantity,receiver):
+def customers_inventory_sales(telephone,dietary_supplement,quantity,discount_rate,receiver):
     #check if customer exist in database
     #if customer exist in database continue with the transaction
     #if customer does not exist in database create customer inventory 
@@ -393,7 +468,7 @@ def customers_inventory_sales(telephone,dietary_supplement,quantity,receiver):
         customer=Customer.objects.create(telephone=telephone)
         customer.save()
         customer_id=Customer.objects.latest('id')
-        customer_inventory=customer_inventory_sales_details(customer_id.id,dietary_supplement,quantity,receiver)
+        customer_inventory=customer_inventory_sales_details(customer_id.id,dietary_supplement,quantity,discount_rate,receiver)
         if customer_inventory == True:
             #message='invoice:'
             return {"status":'success','success':"Transaction successful"}
@@ -402,7 +477,7 @@ def customers_inventory_sales(telephone,dietary_supplement,quantity,receiver):
             return {'status':'error','error':"Transaction Failed"}
     else:
         customer_id=Customer.objects.get(telephone=telephone)
-        customer_inventory=customer_inventory_sales_details(customer_id.id,dietary_supplement,quantity,receiver)
+        customer_inventory=customer_inventory_sales_details(customer_id.id,dietary_supplement,quantity,discount_rate,receiver)
         if customer_inventory == True:
             return {'status':'success','success':"Transaction successful"}
         else:
@@ -414,7 +489,7 @@ def customer_invoive(customer_id):
     for details in customer_inventory_details:
         stack.append([details.dietary_supplement.supplement])
 
-def customer_inventory_sales_details(customer_id,dietary_supplement,quantity,receiver):
+def customer_inventory_sales_details(customer_id,dietary_supplement,quantity,discount_rate,receiver):
 
     #count total items in the list
     total_dietary_supplements_items=len(dietary_supplement)
@@ -428,10 +503,17 @@ def customer_inventory_sales_details(customer_id,dietary_supplement,quantity,rec
             total_cost+=float(total_cost_per_unit)
     #print(' hello world ',total_cost,dietary_supplement,quantity)
     #customer_inventory_id.id
+
     #sales_inventory=customer_inventory_sales_record(customer_inventory_id.id,dietary_supplement,quantity)
     #return sales_inventory
-    
-    customers_inventory=Customer_Inventory_Records.objects.create(customer=Customer.objects.get(pk=customer_id),total_dietary_supplement_items=total_dietary_supplements_items,total_quantity_of_each_supplement_item=total_quqatity_of_dietary_supplement_items,total_cost=total_cost,payment_received_by=User.objects.get(pk=receiver))
+    discount_cost=0
+    if int(discount_rate)>0:
+        discount_cost=total_cost*[(100-discount_rate)/100]
+        discount_status=True
+    else:
+        discount_cost=total_cost
+        discount_status=False
+    customers_inventory=Customer_Inventory_Records.objects.create(customer=Customer.objects.get(pk=customer_id),total_dietary_supplement_items=total_dietary_supplements_items,total_quantity_of_each_supplement_item=total_quqatity_of_dietary_supplement_items,total_cost=discount_cost,discount_status=discount_status,discount_rate=discount_rate,discount_amount=discount_cost,payment_received_by=User.objects.get(pk=receiver))
     customers_inventory.save()
     customer_inventory_id=Customer_Inventory_Records.objects.latest('id')
     generate_inventory_number=inventory_number(customer_inventory_id.id)
@@ -517,6 +599,7 @@ def generate_supplement_report(start_date,end_date):
     supplement_reports=Dietary_Sale_Inventory_Table.objects.filter(date_purschaesd__gte=start_date,date_purschaesd__lte=end_date)
     for supplement in supplement_reports:
         data.append({'data_purchased':supplement.date_purschaesd,'serial_code':supplement.dietary.serial_code,'supplement':supplement.dietary.supplement,'cost_per_unit':supplement.cost_per_unit,'quantity_purchased':supplement.quantity,'total_cost':supplement.total_cost})
+    print(data,' hello ')
     return data 
     
 

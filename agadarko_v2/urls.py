@@ -62,5 +62,8 @@ urlpatterns=[
     path('general-supplement-sales-report/',views.general_supplement_sales_report),
     path('daily-supplement-sales-report/',views.daily_supplement_sales_report),
     path('medical-diagnosis-history-search/',views.medical_diagnosis_history_search),
-    path('medical-diagnosis-history-cases/<str:card_number>',views.medical_diagnosis_history_cases)
+    path('medical-diagnosis-history-cases/<str:card_number>',views.medical_diagnosis_history_cases),
+    path('card-fees-charge-setup/',views.card_fees_charge_setup),
+    path('hospital-card-charges/',views.hospital_card_charges),
+    path('card-charges-logs/',views.card_charges_logs)
 ]

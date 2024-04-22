@@ -218,7 +218,7 @@ def create_patient_diagnosis(case_number,diagnosis):
 
 
 
-def patient_laboratory_request(in_house,lab_request,case_number,lab_test_type,photo):
+def patient_laboratory_request(in_house,lab_request,case_number,lab_test_type,discount_rate,photo):
     '''
         -if lab test is done inside, lab test details are sent to the lab technician 
         -if lab test is not inside the details are printed out and when the results are returned it is saved as photo
@@ -229,7 +229,7 @@ def patient_laboratory_request(in_house,lab_request,case_number,lab_test_type,ph
         patient_lab_request.laboratory_report_request_status=True
         patient_med_record_id=patient_lab_request.id
         patient_lab_request.save()
-        create_patient_lab_test=create_test_lab_test(patient_med_record_id,lab_test_type)
+        create_patient_lab_test=create_test_lab_test(patient_med_record_id,lab_test_type,discount_rate)
         return create_patient_lab_test
 
     elif in_house == False and lab_request == True:
@@ -241,11 +241,11 @@ def patient_laboratory_request(in_house,lab_request,case_number,lab_test_type,ph
         uploads=upload_patient_lab_test(patient_med_record_id,photo) 
         return uploads      
          
-def create_test_lab_test(patient_med_id,lab_test_type):
+def create_test_lab_test(patient_med_id,lab_test_type,discount_rate):
     doctor_patient_lab_request=Patient_Laboratory_Test_Records.objects.create(patient=Patient_Medical_Diagnosis_Records.objects.get(pk=patient_med_id),)
     doctor_patient_lab_request.save()
     patient_lab_request_id=Patient_Laboratory_Test_Records.objects.latest('id')
-    lab_test_cost=patient_laboratory_test_cost(patient_lab_request_id.id,lab_test_type)
+    lab_test_cost=patient_laboratory_test_cost(patient_lab_request_id.id,lab_test_type,discount_rate)
     selected_lab_test=patient_laboratory_test_types(patient_lab_request_id.id,lab_test_type)
 
     if lab_test_cost ==True and selected_lab_test==True:
@@ -254,17 +254,33 @@ def create_test_lab_test(patient_med_id,lab_test_type):
         return {"status":'error','error':'laboratory test request not successful'}
 
 
-def patient_laboratory_test_cost(patient_lab_request_id,lab_test_type):
+def patient_laboratory_test_cost(patient_lab_request_id,lab_test_type,discount_rate):
     total_cost=0
+    discount_cost=0
     for test in range(len(lab_test_type)):
         lab_test_costs=Laboratory_Test_Cost_Details.objects.filter(id=lab_test_type[test])
 
         for lab_test in lab_test_costs:
             total_cost+=float(lab_test.test_cost)
-    patient_lab=Patient_Laboratory_Test_Records.objects.get(pk=patient_lab_request_id)    
+    patient_lab=Patient_Laboratory_Test_Records.objects.get(pk=patient_lab_request_id)
+    
+    if int(discount_rate) > 0 :
+        patient_lab.total_cost=total_cost
+        discount_cost=total_cost*(100-int(discount_rate))/100
+        patient_lab.discount_rate=discount_rate
+        patient_lab.discount_status=True
+        patient_lab.discount_amount=discount_cost
+        patient_lab.save()
+        return True
+    else:
+        patient_lab.total_cost=total_cost
+        patient_lab.save()
+        return True
+    '''    
     patient_lab.total_cost=total_cost
     patient_lab.save()
     return True
+    '''
 
 def patient_laboratory_test_types(patient_lab_id,lab_test_type):
     '''
@@ -288,32 +304,42 @@ def upload_patient_lab_test(patient_lab_id,photo):
 
 
 
-def patient_dietory_request(case_number,dietary_supplements):
+def patient_dietory_request(case_number,dietary_supplements,discount_rate):
     patient_diagnosis_dietary=patient_medical_diagnosis_details(case_number)
     patient_diagnosis_dietary.dietary_prescription_request=True
     patient_diagnosis_dietary_id=patient_diagnosis_dietary.id
     patient_diagnosis_dietary.save()
-    supplement=patient_dietary_supplement_details(patient_diagnosis_dietary_id,dietary_supplements)
+    supplement=patient_dietary_supplement_details(patient_diagnosis_dietary_id,dietary_supplements,discount_rate)
     if supplement == True:
         return {'status':'success','success':'patient dietary supplement send successsfully'}
 
-def patient_dietary_supplement_details(patient_id,dietary_supplements):
+def patient_dietary_supplement_details(patient_id,dietary_supplements,discount_rate):
     patient_supplements=Patient_Dietary_Supplementary_Records.objects.create(patient=Patient_Medical_Diagnosis_Records.objects.get(pk=patient_id))
     patient_supplements.save()
     patient_dietary_supplement=Patient_Dietary_Supplementary_Records.objects.latest('id')
-    patient_dietary_cost=patient_dietary_supplements_cost(patient_dietary_supplement.id,dietary_supplements)
+    patient_dietary_cost=patient_dietary_supplements_cost(patient_dietary_supplement.id,dietary_supplements,discount_rate)
     patient_dietary_supplement_lists=patient_dietary_supplement_list(patient_dietary_supplement.id,dietary_supplements)
     if patient_dietary_cost == True and patient_dietary_supplement_lists == True:
         return True
 
-def patient_dietary_supplements_cost(patient_supplement_id,dietary_supplements):
+def patient_dietary_supplements_cost(patient_supplement_id,dietary_supplements,discount_rate):
     total_cost=0
+    discount_cost=0
     for supplements in range(len(dietary_supplements)):
         patient_supplement_bill=Dietary_Supplementary.objects.filter(serial_code=dietary_supplements[supplements])
         for supplement in patient_supplement_bill:
             total_cost+=float(supplement.price)
+    if int(discount_rate) > 0:
+        discount_cost=float(total_cost)*(100-int(discount_rate))/100
+        discount_status=True
+    else:
+        discount_cost=total_cost
+        discount_status=False
     patient_supplement_info=Patient_Dietary_Supplementary_Records.objects.get(pk=patient_supplement_id)
     patient_supplement_info.total_cost=total_cost
+    patient_supplement_info.discount_status=discount_status
+    patient_supplement_info.discount_rate=discount_rate
+    patient_supplement_info.discount_amount=discount_cost
     patient_supplement_info.save()
     return True
 

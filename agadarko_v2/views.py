@@ -4,14 +4,18 @@ from django.contrib.auth import authenticate,login,logout
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.contrib.auth.models import User,Group
-from .codeBase.hospital import view_opd_vitals,view_staffs,allSuperUser,edit_staff,create_opd_vitals,view_regions,check_region,view_group,create_groups,edit_groups,view_hospital,create_hospital_details,create_staff,view_all_staffs,get_staff
+from .codeBase.hospital import view_opd_vitals,card_fees_log,get_charges_details,card_charges,view_staffs,allSuperUser,edit_staff,create_opd_vitals,view_regions,check_region,view_group,create_groups,edit_groups,view_hospital,create_hospital_details,create_staff,view_all_staffs,get_staff
 from .codeBase.patient import check_for_patient_info,patient_opd_history_details,generate_patient_new_case,make_payement,get_case_number,patient_opd_info,search_patient,create_patinet_opd,view_all_patient,view_patient_records
 from .codeBase.doctor import patient_medical_details,shortage_dietary_supplement,patient_medical_dignosis_history_search,patient_medical_dignosis_history_cases,dietary_supplemnetary,view_checked_in_patient,check_patient_medical_diagnosis_records,create_patient_complaints,create_patient_diagnosis,patient_laboratory_request,patient_dietory_request
-from  .codeBase.dietary import daily_supplements_sales,daily_supplements_sales_details,generate_supplements_dietary_reports,generate_supplement_report,filterDietarySupplement,get_dietary_supplement,getDietarySupplement,create_dietary_supplement_details,customers_inventory_sales,update_dietary_details_stock,viewStockingSupplementDietaryList,dietary_pending_for_restock,dietary_pending_for_restock,update_dietary_details,view_patient_dietary_supplements,view_patient_dispenary,dispensed_patient_dietary_supplement   
+from  .codeBase.dietary import daily_supplements_sales,dietaryStockingDetails,daily_supplements_sales_details,generate_supplements_dietary_reports,generate_supplement_report,filterDietarySupplement,get_dietary_supplement,getDietarySupplement,create_dietary_supplement_details,customers_inventory_sales,update_dietary_details_stock,viewStockingSupplementDietaryList,dietary_pending_for_restock,dietary_pending_for_restock,update_dietary_details,view_patient_dietary_supplements,view_patient_dispenary,dispensed_patient_dietary_supplement   
 from .codeBase.laboratory import view_lab_test_cost,make_lab_test_payment,getLaboratoryList,create_lab_test_details,view_lab_test_cost_details,edit_lab_test_details,view_waiting_patient_lab_test,view_patient_lab_records,update_test_results, create_outside_lab_test,input_lab_test_result
 #from rest_framework import serializers
 from django.core import serializers
 from  rest_framework.authtoken.models import Token
+from rest_framework.decorators import authentication_classes,permission_classes
+from rest_framework.authentication import SessionAuthentication,BasicAuthentication,TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 import json
 # Create your views here.
 
@@ -35,10 +39,14 @@ def auth(request):
           
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+
 def view_region(request):
     '''
     view all regions
     '''
+    print(request.user.id)
     regions=view_regions()
     return Response(regions)
 
@@ -46,6 +54,8 @@ def view_region(request):
 creat 
 '''
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_regions(request):
     '''
     create region
@@ -69,12 +79,16 @@ def create_regions(request):
 '''
 
 @api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_all_groups(request):
     groups=view_group()
     return Response(groups)
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_user_groups(request):
     #['doctor','nurse','lab technician']
     #groups=create_groups()
@@ -94,12 +108,16 @@ def create_user_groups(request):
 '''
 
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_all_hospital(request):
     hosptials=view_hospital()
 
     return Response(hosptials)
 
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_hospital_detail(request):
     #hospital=create_hospital_details('Agadarko',1,'agardakro@example.com','23354002345','Kwabenya',1)
     if request.method == "POST":
@@ -117,20 +135,28 @@ def create_hospital_detail(request):
    #edit staffs
 '''
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_total_staff(request):
     data=view_staffs(1)
     print('====hello==== ',data)
     return Response({'hello':'hii'})
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_staffs(request):
     staff=view_all_staffs(1)
     return Response(staff)
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_staff_details(request,username):
     staff=get_staff(username)
     
     return Response(staff)
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_new_staffs(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -142,6 +168,8 @@ def create_new_staffs(request):
 
 
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def edit_staff_info(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -151,6 +179,8 @@ def edit_staff_info(request):
 
 
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def allSuperUsers(request):
    
     data=allSuperUser()
@@ -159,21 +189,27 @@ def allSuperUsers(request):
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_all_opd_vitals(request):
     vital=view_opd_vitals()
     return Response(vital)
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_opd_vital(request):
     if request.method=="POST":
         data=json.loads(request.body)
         #print('hello world',data)
         
-        vital=create_opd_vitals(data["opd_vitals"],1)
+        vital=create_opd_vitals(data["opd_vitals"],request.user.id)
         return Response(vital)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_Checked_in_patient_lists(request):
     patient=view_checked_in_patient()
     return Response(patient)
@@ -188,6 +224,8 @@ def patients(request):
     return Response(patient)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def patients_search(request):
     if request.method == "POST":
        data=json.loads(request.body)
@@ -202,17 +240,23 @@ def create_patient_medical_bio_info(request):
        patient=check_for_patient_info(data['first_name'],data['last_name'],data['telephone'],data['date_of_birth'],data['region'],1)
        return Response(patient)
 
-@api_view(['GET','POST'])       
+@api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])       
 def patient_opd_information(request,card_number):
     
     data=patient_opd_info(card_number)
     return Response(data)
 
 @api_view(['GET','POST']) 
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def getCaseNumber(request,card_number):
     data=get_case_number(card_number)
     return Response(data)
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def card_payment(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -220,18 +264,24 @@ def card_payment(request):
         payment=make_payement(data['case_number'],data['amount'])
         return Response(payment)
 @api_view(['POST','GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_patient_opd_history_details(request,case_number):
     #print('hello')
     history_details=patient_opd_history_details(case_number)
     return Response(history_details)
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def generate_new_case(request):
     if request.method =="POST":
         data=json.loads(request.body)
         #print(data)
-        new_case=generate_patient_new_case(data['card_number'],data['amount'],1)
+        new_case=generate_patient_new_case(data['card_number'],data['amount'],request.user.id)
         return Response(new_case)
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_patient_opd_vital_info(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -242,8 +292,10 @@ def create_patient_opd_vital_info(request):
 #patient=create_patinet_opd('00000003',['00000003','00000004','00000005'],['120/80','85kg','35'])
 #patient edical diagnosis
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_patient_medical_diagnosis(request,case_number):
-    patient_diagnosis=check_patient_medical_diagnosis_records(case_number,1)
+    patient_diagnosis=check_patient_medical_diagnosis_records(case_number,request.user.id)
     return Response(patient_diagnosis)
 
 
@@ -253,6 +305,8 @@ def create_patient_medical_diagnosis(request,case_number):
 test tomorrow
 '''
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def patient_complains_medical_diagnosis(request):
     '''
     creating patient diagonal case
@@ -264,6 +318,8 @@ def patient_complains_medical_diagnosis(request):
         return Response(complaints)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def patient_doctor_medical_diagnosis(request):
     if request.method == 'POST':
         data=json.loads(request.body)
@@ -272,6 +328,8 @@ def patient_doctor_medical_diagnosis(request):
         return Response(diagnosis)
     
 @api_view(['GET','POST'])    
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def medical_diagnosis_history_search(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -279,29 +337,38 @@ def medical_diagnosis_history_search(request):
         return Response(search)
 
 @api_view(['GET','POST']) 
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def medical_diagnosis_history_cases(request,card_number):
     cases=patient_medical_dignosis_history_cases(card_number)
     return Response(cases)
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def patient_lab_test(request):
     if request.method == "POST":
         data=json.loads(request.body)
         print(data)
-        lab_test=patient_laboratory_request(bool(data['in_house_lab_status']),True,data['case_number'],data['serial_code'],'photo.jpg')
+        lab_test=patient_laboratory_request(bool(data['in_house_lab_status']),True,data['case_number'],data['serial_code'],data['discount_rate'],'photo.jpg')
         return Response(lab_test)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def prescribe_patient_dietary_supplement(request):
 
     if request.method == "POST":
         data=json.loads(request.body)
-        supplements=patient_dietory_request(data['case_number'],data['serial_code'])
+        #print(data)
+        supplements=patient_dietory_request(data['case_number'],data['serial_code'],data['discount_rate'])
         return Response(supplements)
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_lab_test_list(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -312,6 +379,9 @@ def get_lab_test_list(request):
         return Response(test_list)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+
 def get_dietary_supplement_list(request):
     if request.method=="POST":
         data=json.loads(request.body)
@@ -322,6 +392,8 @@ def get_dietary_supplement_list(request):
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def get_filter_supplement_list(request):
     if request.method=="POST":
         data=json.loads(request.body)
@@ -333,6 +405,8 @@ def get_filter_supplement_list(request):
 creating dieatary supplement and restocking supplement dietary
 '''
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_dietary_supplement(request):
     data=dietary_supplemnetary()
     #print(data,'hittttt')
@@ -340,6 +414,8 @@ def view_dietary_supplement(request):
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def stocking_needing_urgent_stocking(request):
 
     data=shortage_dietary_supplement()
@@ -347,6 +423,8 @@ def stocking_needing_urgent_stocking(request):
     return Response(data)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_dietary_supplements_details(request):
     #
     #return Response(supplement)
@@ -357,6 +435,8 @@ def create_dietary_supplements_details(request):
         #print(data,'=====helloo=====')
         return Response(supplement)
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def stock_dieatry_supplement(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -365,16 +445,24 @@ def stock_dieatry_supplement(request):
         return Response(supplements)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def dietary_stocking_history(request,dietary_code):
-    supplement=viewStockingSupplementDietaryList(dietary_code)
+    #supplement=viewStockingSupplementDietaryList(dietary_code)
+    supplement=dietaryStockingDetails(dietary_code)
+    print(supplement)
     return Response(supplement)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def dietary_which_needs_to_restock(request):
     dietary_supplement=dietary_pending_for_restock()
     return Response(dietary_supplement)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def updateDietarySupplementName(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -383,6 +471,8 @@ def updateDietarySupplementName(request):
         return Response(dietary)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def deitary_supplement_details(request,dietary_code):
     data=get_dietary_supplement(dietary_code)
     return Response(data)
@@ -391,14 +481,20 @@ def deitary_supplement_details(request,dietary_code):
 patient dietary supplement dispensary
 '''
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def viewPatientDietarySupplementList(request):
     patient_dietary=view_patient_dietary_supplements()
     return Response(patient_dietary)
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def patient_dietary_records(request,case_number):
-    records=view_patient_dispenary(case_number,1)
+    records=view_patient_dispenary(case_number,request.user.id)
     return Response(records)
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def patient_dispense_dietary_supplement(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -406,10 +502,12 @@ def patient_dispense_dietary_supplement(request):
         supplement=dispensed_patient_dietary_supplement(data['case_number'],data['serial_code'],data['quantity'],data['amount'])
     return Response(supplement)
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_patient_dietary_supplement(request):
     if request.method =="POST":
         data=json.loads(request.body)
-        dietary_ivemtory=customers_inventory_sales(data['telephone'],data['serial_code'],data['quantity'],1)
+        dietary_ivemtory=customers_inventory_sales(data['telephone'],data['serial_code'],data['quantity'],request.user.id)
         return Response(dietary_ivemtory)
 
 
@@ -419,11 +517,15 @@ laboratory details
 '''
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_laboratory_list(request):
     lab_test=view_lab_test_cost()
     return Response(lab_test)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_laboratory_test_details(request):
     if request.method=="POST":
        data=json.loads(request.body)
@@ -433,11 +535,15 @@ def create_laboratory_test_details(request):
        return Response(lab_test)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_laboratory_test_details(request,lab_code):
     lab_details=view_lab_test_cost_details(lab_code)
     return Response(lab_details)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def edit_laboratory_details(request):
     if request.method == "POST":
        data=json.loads(request.body)
@@ -449,15 +555,21 @@ def edit_laboratory_details(request):
 patient laboratory codes
 '''
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def view_all_waiting_patient_laboratory(request):
     patients=view_waiting_patient_lab_test()
     return Response(patients)
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def patient_laboratory(request,case_number):
     records=view_patient_lab_records(case_number)
     return Response(records)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def interperate_patient_lab_details(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -467,6 +579,8 @@ def interperate_patient_lab_details(request):
         return Response(results_interperations)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def patient_lab_payment(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -475,29 +589,61 @@ def patient_lab_payment(request):
         return Response(status)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_outside_lab_test_cases(request):
     lab=create_outside_lab_test('name','telephone','lab_file_photo',['lab_test_list'],'user_id')
     return Response(lab)
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def interpertae_outside_lab_results(request):
     lab_results=input_lab_test_result('case_number',['lab_test_list'],['results'])
     return Response(lab_results)
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def daily_inventory_sales(request):
     daily_supplement=daily_supplements_sales()
     return Response(daily_supplement)
-
+@api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def daily_sales_details(request,serial_code):
 
     daily_sales_report=daily_supplements_sales_details(serial_code)
     return Response(daily_sales_details)
 
+@api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def card_fees_charge_setup(request):
+    if request.method == "POST":
+        data=json.loads(request.body)
+        charges=card_charges(data['card_fees'],data['renewal_card_fees'],request.user.id)
+        return Response(charges)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def hospital_card_charges(request):
+    charges=get_charges_details(request.user.id)
+    return Response(charges)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def card_charges_logs(request):
+    charge_logs=card_fees_log(request.user,id)
+    return Response(charge_logs)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def generate_general_sales_reports(request):
     """
     if request.method == "POST":
@@ -509,6 +655,8 @@ def generate_general_sales_reports(request):
     return Response(generate_report)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def general_supplement_sales_report(request):
     if request.method == "POST":
         data=json.loads(request.body)
@@ -517,6 +665,8 @@ def general_supplement_sales_report(request):
 
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def daily_supplement_sales_report(request):
     if request.method == "POST":
          data=json.loads(request.body)

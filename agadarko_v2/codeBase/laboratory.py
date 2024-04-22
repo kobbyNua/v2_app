@@ -132,18 +132,36 @@ def  update_lab_test_diagnosis(case_number):
 
 def make_lab_test_payment(case_number,amount):
      patient=get_patient_lab_test_details(case_number)
-     total_cost=patient.total_cost
-     balance=float(total_cost)-float(amount)
-     if balance == 0.00:
+     
+     discount_status=patient.discount_status
+     if discount_status == True:
+        total_cost=patient.discount_amount
+        balance=float(total_cost)-float(amount)
+        if balance == 0.00:
           patient.amount_paid=amount
           patient.payment_status=True
           patient.save()
           messages='Hi {},payment of GHS {} recieved for lab test.\nbalance {}\n.invoice {}\n.AGADARKO\nAdmin'.format(patient.patient.patient.patient.patient.first_name,amount,balance,case_number)
-          smscalls(messages,patient.patient.patient.patient.patient.telephone)
+          #smscalls(messages,patient.patient.patient.patient.patient.telephone)
           return {"status":'success','message':'payment successful'}
-          
+        else:
+          return {"status":'error','message':"make full payment "} 
      else:
-          return {"status":'error','message':"make full payment "}
+          total_cost=patient.total_cost 
+          balance=float(total_cost)-float(amount)  
+          if balance == 0.00:
+              patient.amount_paid=amount
+              patient.payment_status=True
+              patient.save()
+              messages='Hi {},payment of GHS {} recieved for lab test.\nbalance {}\n.invoice {}\n.AGADARKO\nAdmin'.format(patient.patient.patient.patient.patient.first_name,amount,balance,case_number)
+              #smscalls(messages,patient.patient.patient.patient.patient.telephone)
+              return {"status":'success','message':'payment successful'}
+          else:
+              return {"status":'error','message':"make full payment "} 
+
+
+        
+
 
 def  get_patniet_lab_case(card_number):
      data=[]
@@ -154,7 +172,7 @@ def  get_patniet_lab_case(card_number):
      current_patient_lab=Patient_Laboratory_Test_Records.objects.filter(patient__patient__checked_in=True,patient__patient__checked_out=False,patient__patient__patient__card_number=card_number)
      for patient in current_patient_lab:
           case_id=patient.id
-          current_case.append({'total_cost':patient.total_cost,'case_number':patient.patient.patient.case_number,'total_amount_paid':patient.amount_paid,'date_released':patient.date_released,'date_requested':patient.date_recieved,'payment_status':patient.payment_status})
+          current_case.append({'total_cost':patient.total_cost,'case_number':patient.patient.patient.case_number,'total_amount_paid':patient.amount_paid,'date_released':patient.date_released,'date_requested':patient.date_recieved,'payment_status':patient.payment_status,'discount_status':patient.discount_status,'discount_rate':patient.discount_rate,'discount_amount':patient.discount_amount})
      patient_lab_details=Patient_Laboratory_Test_Results_Details.objects.filter(patient__id=case_id)
      for lab_details in patient_lab_details:
                lab_test_list.append({'labe_test':lab_details.lab_test.test_type,'serial_code':lab_details.lab_test.serial_code,'cost':lab_details.test_cost})

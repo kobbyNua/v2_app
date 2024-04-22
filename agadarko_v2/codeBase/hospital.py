@@ -1,4 +1,4 @@
-from ..models import Hospital,Region,Staff,OPD_Vital,HospitalCardFees,HospitalCardFeesLogs
+from ..models import Hospital,Region,Staff,OPD_Vital,HospitalCardFees,HospitalCardFeesLogs,HospitalCardRenewalFees,HospitalCardRenewalFeesLogs
 from django.contrib.auth.models import User,Group
 from django.db.models import Count ,F,Q,Sum,Value
 from django.db.models.functions import LPad
@@ -266,8 +266,18 @@ def edit_opd_vitals():
 card fees
 '''
 
+def card_charges(fees_card,card_renewal_charges,user_id):
+	new_card_charge=card_charges_set_up(fees_card,user_id)
+	card_renewal_charge=card_renewal_charges_set_up(card_renewal_charges,user_id)
+	if new_card_charge == True and card_renewal_charge == True:
+		return {"status":'success','success':'card charges added'}
+	else:
+		return {"status":'error','error':'card charges added'}
+    
+        
+
 def card_charges_set_up(fees_card,user_id):
-	get_hospital=Staff.objects.get(user__id=user_id)
+	get_hospital=Staff.objects.get(staff__id=user_id)
 
 	check_hospital_card_charges=HospitalCardFees.objects.filter(hospital__id=get_hospital.hospital.id)
 	if not check_hospital_card_charges.exists():
@@ -284,12 +294,73 @@ def card_charges_set_up(fees_card,user_id):
 		hospital_card_charges.save()
 		logs=hospital_card_charges_id(hospital_card_charge_id,fees_card,user_id)
 		return logs
+	
+
+def card_renewal_charges_set_up(card_renewal_fees,user_id):
+	get_hospital=Staff.objects.get(staff__id=user_id)
+
+	check_hospital_renewal_card_charges=HospitalCardRenewalFees.objects.filter(hospital__id=get_hospital.hospital.id)
+	if not check_hospital_renewal_card_charges.exists():
+		hospital_card_charges=HospitalCardRenewalFees.objects.create(card_renewal_fees=card_renewal_fees,hospital=Hospital.objects.get(pk=get_hospital.hospital.id))
+		hospital_card_charges.save()
+		get_charges_id=HospitalCardRenewalFees.objects.latest('id')
+		logs=hospital_renewal_card_charges_id(get_charges_id.id,card_renewal_fees,user_id)
+		return logs
+		
+	else:
+		hospital_card_charges=HospitalCardRenewalFees.objects.get(hospital__id=get_hospital.id)
+		hospital_card_charges.card_fees=card_renewal_fees
+		hospital_card_charge_id=hospital_card_charges.id
+		hospital_card_charges.save()
+		logs=hospital_renewal_card_charges_id(hospital_card_charge_id,card_renewal_fees,user_id)
+		return logs
+
+
 
 
 def hospital_card_charges_id(hospital_card_charge_id,amount,user_id):
 	logs=HospitalCardFeesLogs.objects.create(card_fees=HospitalCardFees.objects.get(pk=hospital_card_charge_id),amount_charged=amount,added_by=User.objects.get(pk=user_id))
 	logs.save()
-	return {"status":'success','success':'card charges added'}
+	#return {"status":'success','success':'card charges added'}
+	return True
 
 
+def hospital_renewal_card_charges_id(hospital_card_charge_id,amount,user_id):
+	logs=HospitalCardRenewalFeesLogs.objects.create(card_fees=HospitalCardRenewalFees.objects.get(pk=hospital_card_charge_id),amount_charged=amount,added_by=User.objects.get(pk=user_id))
+	logs.save()
+	#return {"status":'success','success':'card charges added'}
+	return True
 
+
+def get_charges_details(user_id):
+	return {'card_charge':get_card_chages(user_id),'card_renewal_fees':get_card_renewal_charges(user_id)}
+
+def get_card_chages(user_id):
+	get_hospital=Staff.objects.get(staff__id=user_id)
+
+	charges=HospitalCardFees.objects.filter(hospital__id=get_hospital.hospital.id)[0]
+	return {'fees':charges.card_fees}
+def get_card_renewal_charges(user_id):
+    get_hospital=Staff.objects.get(staff__id=user_id)
+    charges=HospitalCardRenewalFees.objects.filter(hospital__id=get_hospital.hospital.id)[0]
+    return {'fees':charges.card_renewal_fees}
+
+
+def card_fees_log(user_id):
+	return {'fees':get_card_charges_log(user_id),'review_fees':get_card_renewal_charges_log(user_id)}
+
+def get_card_charges_log(user_id):
+	get_hospital=Staff.objects.get(staff__id=user_id)
+	data=[]
+	logs=HospitalCardFeesLogs.objects.filter(card_fees__hospital__id=get_hospital.hospital.id)
+	for fees_logs in logs:
+		data.append({'amount':fees_logs.amount_charged,'date_charged':fees_logs.date_changed,'added_by':fees_logs.added_by.first_name+' '+fees_logs.added_by.last_name})
+	return data
+
+def get_card_renewal_charges_log(user_id):
+	get_hospital=Staff.objects.get(staff__id=user_id)
+	data=[]
+	logs=HospitalCardRenewalFeesLogs.objects.filter(card_fees__hospital__id=get_hospital.hospital.id)
+	for fees_logs in logs:
+		data.append({'amount':fees_logs.amount_charged,'date_charged':fees_logs.date_changed,'added_by':fees_logs.added_by.first_name+' '+fees_logs.added_by.last_name})
+	return data

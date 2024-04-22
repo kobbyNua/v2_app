@@ -254,12 +254,15 @@ def make_payement(case_number,amount):
          patient_payment_update.card_payment_status=True
          payment_payement_history_id=patient_payment_update.id
          patient_payment_update.save()
-
+         #check_card_payment_status=Patient_Hospital_Card_Payment.objects.filter(patient__id=get_patient.patient.id)
+         #if not check_card_payment_status.exist():
          payments=Patient_Hospital_Card_Payment.objects.create(patient=Patient_Hospital_History.objects.get(pk=get_patient.patient.id),amount=amount)
          payments.save()
          message="Hi {},\n you paid GHS {} for card registration.\n balance GHS{}\n. AGADARKO\nAdmin".format(patient_payment_update.patient.first_name,amount,balance)
          smscalls(message,patient_payment_update.patient.telephone)
          return {'status':'success','message':'card payment made successfully'}
+         #else:
+         #return {'status':'error','message':'card payment already made'}
      else:
         return {'status':'error','message':'amount insufficient'}
      
@@ -324,6 +327,7 @@ def patient_opd(case_number,vitals,results):
     patient_id=Patient_Medical_History_Records.objects.get(case_number=case_number)
     for vital in range(len(vitals)):
         get_opd_vitals=OPD_Vital.objects.get(serial_code=vitals[vital])
+        print('vitals ',vitals[vital],' ',get_opd_vitals.id)
         patients=Patient_OPD_Vitals.objects.create(patient=Patient_Medical_History_Records.objects.get(pk=patient_id.id),vital=OPD_Vital.objects.get(pk=get_opd_vitals.id),results=results[vital])
         patients.save()
 

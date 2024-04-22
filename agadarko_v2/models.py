@@ -188,6 +188,9 @@ class Patient_Dietary_Supplementary_Records(models.Model):
       total_cost=models.FloatField(default=0.00)
       amount_paid=models.FloatField(default=0.00)
       payment_status=models.BooleanField(default=False)
+      discount_status=models.BooleanField(default=False)
+      discount_rate=models.IntegerField(default=0)
+      discount_amount=models.FloatField(default=0.0)
       #received_by=models.ForeignKey(User,on_delete=models.CASCADE)
       date_recieved=models.DateField()
       date_released=models.DateField() 
@@ -220,6 +223,10 @@ class Patient_Laboratory_Test_Records(models.Model):
       total_cost=models.FloatField(default=0.00)
       payment_status=models.BooleanField(default=False)
       amount_paid=models.FloatField(default=0.00)
+      discount_status=models.BooleanField(default=False)
+      discount_rate=models.IntegerField(default=0)
+      discount_amount=models.FloatField(default=0.0)
+
       #received_by=models.ForeignKey(User,on_delete=models.CASCADE)
       date_recieved=models.DateField()
       date_released=models.DateField()
@@ -272,6 +279,9 @@ class Customer_Inventory_Records(models.Model):
       total_dietary_supplement_items=models.IntegerField(default=1)
       total_quantity_of_each_supplement_item=models.IntegerField(default=1)
       total_cost=models.FloatField(default=0.00)
+      discount_status=models.BooleanField(default=False)
+      discount_rate=models.IntegerField(default=0)
+      discount_amount=models.FloatField(default=0.0)
       payment_received_by=models.ForeignKey(User,on_delete=models.CASCADE)
       date_time_of_purchased=models.DateField()
       def save(self,*args,**kwargs):
@@ -295,6 +305,8 @@ class Dietary_Sale_Inventory_Table(models.Model):
       quantity=models.IntegerField(default=0)
       cost_per_unit=models.FloatField(default=0.00)
       total_cost=models.FloatField(default=0.00)
+
+      
       date_purschaesd=models.DateField(default="1990-08-04")
       def save(self,*args,**kwargs):
             self.total_cost=int(self.quantity)*float(self.cost_per_unit)
