@@ -279,6 +279,7 @@ class Customer_Inventory_Records(models.Model):
       total_dietary_supplement_items=models.IntegerField(default=1)
       total_quantity_of_each_supplement_item=models.IntegerField(default=1)
       total_cost=models.FloatField(default=0.00)
+      amount_paid=models.FloatField(default=0.00)
       discount_status=models.BooleanField(default=False)
       discount_rate=models.IntegerField(default=0)
       discount_amount=models.FloatField(default=0.0)

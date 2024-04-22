@@ -138,7 +138,7 @@ def create_hospital_detail(request):
 @authentication_classes([SessionAuthentication,TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def view_total_staff(request):
-    data=view_staffs(1)
+    data=view_staffs(request.user.id)
     print('====hello==== ',data)
     return Response({'hello':'hii'})
 @api_view(['POST','GET'])
@@ -161,7 +161,7 @@ def create_new_staffs(request):
     if request.method == "POST":
         data=json.loads(request.body)
         print(data)
-        staffs=create_staff(data['first_name'],data['last_name'],data['email'],data['username'],data['telephone'],data['roles'],1,data['super_user_state'])
+        staffs=create_staff(data['first_name'],data['last_name'],data['email'],data['username'],data['telephone'],data['roles'],request.user.id,data['super_user_state'])
         return Response(staffs)
     #staffs=create_staff("Afrifa","Sedem","afrifa@sedem.com",'AfrifaSedem','024569010',[1],1)
     #return Response(staffs)
@@ -233,11 +233,13 @@ def patients_search(request):
        return Response(patient)
 
 @api_view(['GET','POST'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def create_patient_medical_bio_info(request):
     #'John','Kuma','0204588112','1995-05-07',2,1
     if request.method == "POST":
        data=json.loads(request.body)
-       patient=check_for_patient_info(data['first_name'],data['last_name'],data['telephone'],data['date_of_birth'],data['region'],1)
+       patient=check_for_patient_info(data['first_name'],data['last_name'],data['telephone'],data['date_of_birth'],data['region'],request.user.id)
        return Response(patient)
 
 @api_view(['GET','POST'])
@@ -431,7 +433,7 @@ def create_dietary_supplements_details(request):
     if request.method == 'POST':
         print(request.data)
         #print(request.data['photo'],request.data['price'],request.data['dietary_supplement'])
-        supplement=create_dietary_supplement_details(request.data['dietary_supplement'],request.data['price'],int(request.data['quantity']),request.data['photo'],1)
+        supplement=create_dietary_supplement_details(request.data['dietary_supplement'],request.data['price'],int(request.data['quantity']),request.data['photo'],request.user.id)
         #print(data,'=====helloo=====')
         return Response(supplement)
 @api_view(['GET','POST'])
@@ -440,7 +442,7 @@ def create_dietary_supplements_details(request):
 def stock_dieatry_supplement(request):
     if request.method == "POST":
         data=json.loads(request.body)
-        supplements=update_dietary_details_stock(data['serial_code'],data['quantity'],data['price'],1)
+        supplements=update_dietary_details_stock(data['serial_code'],data['quantity'],data['price'],request.user.id)
         print(supplements,'======hello======')
         return Response(supplements)
 
@@ -507,7 +509,7 @@ def patient_dispense_dietary_supplement(request):
 def create_patient_dietary_supplement(request):
     if request.method =="POST":
         data=json.loads(request.body)
-        dietary_ivemtory=customers_inventory_sales(data['telephone'],data['serial_code'],data['quantity'],request.user.id)
+        dietary_ivemtory=customers_inventory_sales(data['telephone'],data['serial_code'],data['quantity'],data['discount_rate'],request.user.id)
         return Response(dietary_ivemtory)
 
 
@@ -574,7 +576,7 @@ def interperate_patient_lab_details(request):
     if request.method == "POST":
         data=json.loads(request.body)
         #print(data)
-        results_interperations=update_test_results(data['case_number'],data['serial_code'],data['results'],1)
+        results_interperations=update_test_results(data['case_number'],data['serial_code'],data['results'],request.user.id)
         print(results_interperations,' hello ')
         return Response(results_interperations)
 

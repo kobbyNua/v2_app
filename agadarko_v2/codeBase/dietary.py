@@ -309,11 +309,11 @@ def patient_medical_dietary_records(patient_case_number):
 
 def update_supplement_dietary_quantity(dietary_serial_code,quantity):
     print('hit',dietary_serial_code,quantity)
-    '''
+    
     dietary_quantity_update=Dietary_Supplementary.objects.get(serial_code=dietary_serial_code)
     dietary_quantity_update.quatity_in_stocked=int(dietary_quantity_update.quatity_in_stocked)-int(quantity)
     dietary_quantity_update.save()
-    '''
+    
 
 
 def sales_record(case_number,amount):
@@ -508,12 +508,12 @@ def customer_inventory_sales_details(customer_id,dietary_supplement,quantity,dis
     #return sales_inventory
     discount_cost=0
     if int(discount_rate)>0:
-        discount_cost=total_cost*[(100-discount_rate)/100]
+        discount_cost=total_cost*(100-int(discount_rate))/100
         discount_status=True
     else:
         discount_cost=total_cost
         discount_status=False
-    customers_inventory=Customer_Inventory_Records.objects.create(customer=Customer.objects.get(pk=customer_id),total_dietary_supplement_items=total_dietary_supplements_items,total_quantity_of_each_supplement_item=total_quqatity_of_dietary_supplement_items,total_cost=discount_cost,discount_status=discount_status,discount_rate=discount_rate,discount_amount=discount_cost,payment_received_by=User.objects.get(pk=receiver))
+    customers_inventory=Customer_Inventory_Records.objects.create(customer=Customer.objects.get(pk=customer_id),total_dietary_supplement_items=total_dietary_supplements_items,total_quantity_of_each_supplement_item=total_quqatity_of_dietary_supplement_items,total_cost=total_cost,amount_paid=discount_cost,discount_status=discount_status,discount_rate=discount_rate,discount_amount=discount_cost,payment_received_by=User.objects.get(pk=receiver))
     customers_inventory.save()
     customer_inventory_id=Customer_Inventory_Records.objects.latest('id')
     generate_inventory_number=inventory_number(customer_inventory_id.id)
